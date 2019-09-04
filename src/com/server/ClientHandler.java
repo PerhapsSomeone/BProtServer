@@ -1,5 +1,6 @@
 package com.server;
 
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -95,7 +96,7 @@ class ClientHandler implements Runnable {
 
 
         try {
-            while (clientSocket.getInputStream().available() == 0) {}
+            //while (clientSocket.getInputStream().available() == 0) {}
             String data = stripString(clientReader.readLine());
 
             clientAESKey = ClientAESKeyFromString(data);
@@ -109,7 +110,7 @@ class ClientHandler implements Runnable {
         String url;
 
         try {
-            while (clientSocket.getInputStream().available() == 0) {}
+            //while (clientSocket.getInputStream().available() == 0) {}
             String data = decryptAES(stripString(clientReader.readLine()), clientAESKey);
             url = data;
             System.out.println("Read user input (decrypted): " + data);
