@@ -1,6 +1,5 @@
 package com.server;
 
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -77,6 +76,7 @@ class ClientHandler implements Runnable {
             return;
         }
 
+        // Der Public Key des Client wird empfangen
         try {
             String data = stripString(clientReader.readLine());
             System.out.println("Received client public key: " + data);
@@ -85,7 +85,8 @@ class ClientHandler implements Runnable {
             e.printStackTrace();
             return;
         }
-
+            
+        // Der Public Key des Servers wird mit dem Key des Client verschlüsselt zurückgesendet
         try {
             System.out.println("Sending server public key: " + new String(Base64.getEncoder().encode(serverPublicKey.getEncoded())));
             clientOutput.println(new String(Base64.getEncoder().encode(serverPublicKey.getEncoded())));
@@ -94,9 +95,9 @@ class ClientHandler implements Runnable {
             return;
         }
 
-
+        // Der AES Key für die Hauptkommunikation wird empfangen.
+        // Um diesen nutzbar zu machen, wird er zuerst mithilfe des Private Key des Servers entschlüsselt und daraufhin in einen gültigen Key umgewandelt.
         try {
-            //while (clientSocket.getInputStream().available() == 0) {}
             String data = stripString(clientReader.readLine());
 
             clientAESKey = ClientAESKeyFromString(data);
@@ -107,10 +108,10 @@ class ClientHandler implements Runnable {
             return;
         }
 
+        
+        // Es wird der Anfragetext des Clients empfangen, entschlüsselt mithilfe des geminsamen AES Keys und gespeichert.
         String url;
-
         try {
-            //while (clientSocket.getInputStream().available() == 0) {}
             String data = decryptAES(stripString(clientReader.readLine()), clientAESKey);
             url = data;
             System.out.println("Read user input (decrypted): " + data);
@@ -120,6 +121,7 @@ class ClientHandler implements Runnable {
             return;
         }
 
+        // Daraufhin wird der Anfragetext an DataHandler gegeben, die Antwort mithilfe des AES Keys verschlüsselt und an den Client zurückgesendet.
         try {
             String encryptedData = encryptAES(DataHandler.getData(url), clientAESKey);
             clientOutput.println(encryptedData);
@@ -129,23 +131,29 @@ class ClientHandler implements Runnable {
             return;
         }
 
-        System.out.println("Closing session...");
+        System.out.println("Closing user session...");
+        return;
     }
 
     private String stripString(String orig) {
+        // Sowohl \n als auch \r Sequenzen werden aus Strings entfernt, um sie zu gültigen Keys zu machen (verhindert EOF Probleme).
         return orig.replace("\n", "").replace("\r", "");
     }
 
     private PublicKey PublicKeyFromString(String key) throws Exception {
+        // Der String wird in einen byte[] Array knovertiert und dekodiert.
         byte[] keyBytes = Base64.getDecoder().decode(key);
 
+        // Der byte[] Array wird genutzt um einen Key zu konstruieren
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         return keyFactory.generatePublic(keySpec);
     }
 
     private Key ClientAESKeyFromString(String key) throws Exception {
+        // Der Key wird zuerst entschlüsselt
         key = decrypt(key);
+        // Daraufhin wird der Base64 Key dekodiert
         byte[] keyBytes = Base64.getDecoder().decode(key);
 
         return new SecretKeySpec(keyBytes, 0, keyBytes.length, "AES");
