@@ -101,7 +101,7 @@ class ClientHandler implements Runnable {
             String data = stripString(clientReader.readLine());
 
             clientAESKey = ClientAESKeyFromString(data);
-            System.out.println("Received client AES key: " + new String(Base64.getEncoder().encode(clientAESKey.getEncoded())));
+            //System.out.println("Received client AES key: " + new String(Base64.getEncoder().encode(clientAESKey.getEncoded())));
 
         } catch (Exception e) {
             e.printStackTrace();
